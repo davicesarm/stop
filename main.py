@@ -8,7 +8,7 @@ def is_stop_valid(answers: dict[str, str], letter: str) -> bool:
             return False
     return True
 
-def jogo(stdscr):
+def jogo(stdscr: curses.window) -> None:
     categorias = [
         "Nome", "Cidade", "Animal", "Objeto", "Cor", "Fruta",
         "Profissão", "Time de Futebol", "País", "Filme"
