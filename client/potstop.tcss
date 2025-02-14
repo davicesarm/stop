@@ -1,0 +1,10 @@
+#grid {
+  layout: grid;
+  grid-size: 2;
+  padding: 1;
+  grid-rows: 4;
+}
+
+.pots {
+  column-span: 1;
+}
