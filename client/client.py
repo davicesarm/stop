@@ -22,7 +22,7 @@ class Client:
         self.__client_sock.close()
         
 
-    def send_messages(self):
+    def send_message(self):
         while True:
             msg = input("> ")
             if msg.lower() in ['exit', 'quit', 'sair']:
@@ -35,7 +35,7 @@ class Client:
     def connect_client(self):
         self.__client_sock.connect((self.__host, self.__port))
         threading.Thread(target=self.receive_messages, daemon=True).start()
-        self.send_messages()
+        self.send_message()
         print("Conexão encerrada.")
         self.__client_sock.close()
 
