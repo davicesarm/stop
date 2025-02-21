@@ -8,3 +8,22 @@
 .pots {
   column-span: 1;
 }
+
+#entry-main {
+  layout: grid;
+  grid-size: 1 2;
+  grid-rows: 4;
+  padding: 1 5;
+  align: center middle;
+  grid-gutter: 0;
+}
+
+.entry-button {
+  width: 40%;
+  min-width: 30;
+}
+
+.entry-input {
+  width: 40%;
+  min-width: 30;
+}
