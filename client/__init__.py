@@ -1,0 +1,1 @@
+"""Potstop game client module."""

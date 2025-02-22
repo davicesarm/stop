@@ -1,11 +1,26 @@
-#grid {
+Screen {
+  padding: 0;
+}
+
+#game-pots {
   layout: grid;
   grid-size: 2;
   padding: 1;
   grid-rows: 4;
 }
 
-.pots {
+#game-horizontal {
+  layout: grid;
+  grid-size: 2 1;
+  height: 5;
+  align: center middle;
+}
+
+Timer {
+  width: 15;
+}
+
+.pot {
   column-span: 1;
 }
 
@@ -19,11 +34,12 @@
 }
 
 .entry-button {
-  width: 40%;
-  min-width: 30;
+  column-span: 1;
+  width: 100%;
+  max-width: 40;
 }
 
 .entry-input {
-  width: 40%;
-  min-width: 30;
+  column-span: 1;
+  max-width: 40;
 }
