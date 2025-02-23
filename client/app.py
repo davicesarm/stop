@@ -1,43 +1,35 @@
-from textual.app import App, ComposeResult
-from textual.widgets import Header, Footer, Input
-from textual.containers import VerticalScroll
-import unicodedata
+from typing import Optional
+from textual.app import App
+
+# from textual.containers import VerticalScroll
+from client.screens import Entry, Game, Ranking
 
 
 class Potstop(App):  # type: ignore
     """Textual app to play Potstop"""
 
     CSS_PATH = "potstop.tcss"
-    
+    POTS = ['CEP', 'MSÉ', 'Ator', 'Nome', 'Música', 'Carro', 'Comida', 'Objeto', 'Verbo', 'Utensílio de cozinha']
+    SCREENS = {"entry": Entry}
+    PLAYERS = ['arthur - 21', 'mari - 19', 'cclaras - 14', 'davis - 13']
+
     def on_mount(self) -> None:
         self.theme = "dracula"
-
-    def compose(self) -> ComposeResult:
-        yield Header()
-        yield Footer()
-        yield VerticalScroll(*self.gen_pots(['CEP', 'MSÉ', 'Ator']),
-            id="grid",
-        )
         
-    def gen_pots(self, pots: list[str]):
-        for pot in pots:
-          yield Input(id=self.normalize(pot.lower()), placeholder=pot, classes="pots")
-          
-    def normalize(self, s: str) -> str:
-        """
-        Normalize a string by removing diacritics.
-        
-        Args:
-            s (str): The input string to normalize.
+        def send_username_to_server(username: Optional[str]) -> None:
             
-        Returns:
-            str: The normalized string with diacritics removed.
-        """
-        # Normalize the string to NFD form (decomposed)
-        decomposed = unicodedata.normalize('NFD', s)
-        # Remove the diacritical marks (combining characters)
-        normalized = ''.join(c for c in decomposed if not unicodedata.combining(c))
-        return normalized
+            #TODO: create send username to server logic here
+            
+            def send_pots_to_server(pots: Optional[list[str]]) -> None:
+                
+                self.push_screen(Ranking(game_leader=True, players=self.PLAYERS))
+
+            assert username is not None
+            self.sub_title = username
+            self.push_screen(Game(pots=self.POTS), send_pots_to_server)
+            self.notify(f"{username} entrou no jogo!")
+
+        self.push_screen('entry', send_username_to_server)
 
 if __name__ == "__main__":
     app = Potstop()
