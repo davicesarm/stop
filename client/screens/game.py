@@ -7,7 +7,7 @@ from textual.widgets import Input, Button, Header, Footer, Digits
 from textual.containers import VerticalScroll, Horizontal, Vertical
 
 
-class Game(Screen[dict[str, str]]):
+class Game(Screen[list[str]]):
 
     def __init__(
         self,
@@ -19,7 +19,7 @@ class Game(Screen[dict[str, str]]):
     def compose(self) -> ComposeResult:
         yield Header()
         yield Vertical(
-            VerticalScroll(*self.__gen_pots(self.__pots), id="game-pots"),
+            VerticalScroll(*self.__gen_pots(), id="game-pots"),
             Horizontal(Timer(), Button("POTS", classes="game-button"), id="game-horizontal"),
             id="game-main",
         )
@@ -27,13 +27,12 @@ class Game(Screen[dict[str, str]]):
 
     @on(Button.Pressed)
     def handle_game_stopped(self) -> None:
-        # _input = self.query_one(Input)
+        inputs = [_input.value for _input in self.query(Input)]
+        
+        self.dismiss(inputs)
 
-        # self.dismiss(_input.value)
-        ...
-
-    def __gen_pots(self, pots: list[str]):
-        for pot in pots:
+    def __gen_pots(self):
+        for pot in self.__pots:
             yield Input(placeholder=pot, classes="pot")
             
             

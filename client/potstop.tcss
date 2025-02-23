@@ -43,3 +43,24 @@ Timer {
   column-span: 1;
   max-width: 40;
 }
+
+#ranking-list {
+  height: 80%;
+  text-align: center;
+}
+
+#ranking-horizontal {
+  layout: grid;
+  grid-size: 2 1;
+  height: 20%;
+  align: center middle;
+}
+
+#ranking-list:focus {
+  border: solid $primary;
+  background: $background 100%;
+}
+
+.option-list--option-highlighted {
+  background: $background;
+}
