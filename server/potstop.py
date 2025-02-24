@@ -6,19 +6,35 @@ from collections import Counter
 class Potstop:
     def __init__(self):
         # Pots padrão
-        self.__letter = self.gen_letter()
+        # self.__letter = self.gen_letter()
+        self.__letter = "M"
         # self.__pots = ['CEP', 'MSÉ', 'Ator', 'Nome', 'Música', 'Carro', 'Comida', 'Objeto', 'Verbo', 'Utensílio de cozinha']
         self.__pots = ['Nome', "Cidade", "Comida", "Animal", "Objeto"]
+        # {"Nome": "Mari", "Cidade": "Maragogi", "Comida": "Macaxeira", "Objeto": "Monitor"}
         self.__players = {}
         self.__order = Queue()
         self.__game_started = False
+        self.__stopped = False
+        self.stop_queue = Queue()
+        self.answers = []
         self.__round = 0
         
-    def is_game_started(self) -> bool:
+    @property
+    def stopped(self) -> bool:
+        return self.__stopped
+
+    def stop(self):
+        self.__stopped = True
+
+    @property
+    def game_started(self) -> bool:
         return self.__game_started
-        
+    
     def start_game(self) -> None:
         self.__game_started = True
+
+    def end_game(self) -> None:
+        self.__game_started = False
         
     def get_players(self) -> list[str]:
         return list(self.__players.keys())

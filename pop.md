@@ -24,6 +24,7 @@ STOP
 - Dados podem ser retornados na resposta.
 #### 📩 Status:
 - ✅ **`10 Stopped`**: O Stop foi realizado com sucesso.
+- ✅ **`11 Verifying Stop`**: O Stop está sendo validado pelo servidor.
 - ❌ **`14 Stop Failed`**: Não foi possivel realizar o stop.
 
 ---

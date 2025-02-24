@@ -39,14 +39,18 @@ class Server:
                 self.__clients.add(client)
                 threading.Thread(target=self.handle_client_requests, args=(client,), daemon=True).start()
             except (OSError, KeyboardInterrupt):
+                print("Encerrando servidor...")
+                self.kill_clients()
                 break
     
     def handle_client_requests(self, client: Client):
         while True:
             try:
-                msg = client.socket.recv(1024).decode()
+                print(self.__potstop.get_ranking())
+                msg: str = client.socket.recv(1024).decode()
                 if not msg:
                     break
+                
                 response = self.handle_message(client, msg)
                 client.socket.sendall(f"{response}".encode())
                 if msg.startswith('QUIT'):
@@ -58,18 +62,36 @@ class Server:
         self.__clients.delete(client)
         client.socket.close()
         
+    def validate_stop(self):
+        while self.__potstop.game_started:
+            while not self.__potstop.stop_queue.is_empty():
+                stop: tuple[Client, dict] = self.__potstop.stop_queue.dequeue()
+                if self.__potstop.is_stop_valid(stop[1]):
+                    self.__potstop.stop()
+                    self.__potstop.stop_queue.clear()
+                    self.__potstop.end_game()
+                    stop[0].socket.sendall("10 Stopped".encode())
+                else:
+                    stop[0].socket.sendall("14 Stop Failed".encode())
+
+        self.broadcast("STOP")
+        answers = [data for _, data in self.__potstop.answers]
+        words = self.__potstop.count_words(answers)
+        for name, ans in self.__potstop.answers:
+            self.__potstop.compute_points(name, ans, words)
+
 
     def handle_message(self, client: Client, msg: str):
         if msg.startswith("QUIT"):
-            print("HEllo world")
             self.__potstop.remove_player(client.name)
             return "30 Left"
         elif msg.startswith('START'):
-            if self.__potstop.is_game_started():
+            if self.__potstop.game_started:
                 return "42 Impossible"
             if self.__potstop.get_leader() != client.name:
                 return "41 Unauthorized"
             self.__potstop.start_game()
+            threading.Thread(target=self.validate_stop, daemon=True).start()
             return "40 Started"
         elif msg.startswith('JOIN'):
             try:
@@ -88,15 +110,24 @@ class Server:
             except json.JSONDecodeError:
                 return "0 Bad Request"
             
-            #TODO: Implementar o stop
-            #TODO: Precisa usar uma fila para caso o stop seja
-            # feito, não seja valido, porém outro stop tinha sido
-            # solicitado por outro cliente com a possibilidade de ser valido.
-            # TODO: Preciso receber o stop de um cliente e conseguir
-            # pegar os dados de todos os clientes.
+            # Adicionar verificao caso tenha tentado dar stop sem o jogo ter começado
+
+            if not self.__potstop.stopped:
+                self.__potstop.stop_queue.enqueue((client, data))
+                return "11 Verifying Stop"
+            else:
+                self.__potstop.answers.append((client.name, data))
+                return "10 Stopped"
             
         else:
             return "0 Bad Request"
+
+
+    def kill_clients(self):
+        if not self.__clients.isEmpty():
+            for client in self.__clients:
+                client.socket.sendall("ENDC".encode())
+                client.socket.close()
 
 
     def stop_server(self):
@@ -112,10 +143,11 @@ class Server:
                 break
         
         self.__server_sock.close()
-        if not self.__clients.isEmpty():
-            for client in self.__clients:
-                client.socket.sendall("ENDC".encode())
-                client.socket.close()
+        self.kill_clients()
+
+    def broadcast(self, msg: str):
+        for client in self.__clients:
+            client.socket.sendall(msg.encode())
 
 if __name__ == "__main__":
     Server().start()
