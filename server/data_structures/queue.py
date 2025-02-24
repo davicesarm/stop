@@ -1,5 +1,7 @@
+from typing import Any
+
 class Node:
-    def __init__(self, value):
+    def __init__(self, value: Any):
         self.value = value
         self.next = None    
     
@@ -9,10 +11,18 @@ class Queue:
         self.tail = None
         self.size = 0
     
-    def __len__(self):
+    def __len__(self) -> int:
         return self.size
         
-    def enqueue(self, value):
+    def peek(self) -> Any:
+        return self.head.value
+        
+    def clear(self) -> None:
+        self.head = None
+        self.tail = None
+        self.size = 0
+        
+    def enqueue(self, value) -> None:
         new_node = Node(value)
         if self.head is None:
             self.head = new_node
@@ -22,7 +32,7 @@ class Queue:
             self.tail = new_node
         self.size += 1
         
-    def dequeue(self):
+    def dequeue(self) -> Any:
         if self.head is None:
             return None
         value = self.head.value
@@ -30,10 +40,27 @@ class Queue:
         self.size += 1
         return value
     
-    def is_empty(self):
+    def is_empty(self) -> bool:
         return self.size == 0
     
-    def __contains__(self, value):
+    def remove(self, key):
+        current = self.head
+        previous = None
+        while current:
+            if current.value == key:
+                if previous:  
+                    previous.next = current.next
+                else:  
+                    self.head = current.next
+                if current == self.tail: 
+                    self.tail = previous
+                return current.value  
+            previous = current
+            current = current.next
+        
+        return None
+
+    def __contains__(self, value) -> bool:
         current = self.head
         while current is not None:
             if current.value == value:
@@ -47,7 +74,7 @@ class Queue:
             yield current.value
             current = current.next
             
-    def __str__(self):
+    def __str__(self) -> str:
         return str([value for value in self])
     
         
