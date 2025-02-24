@@ -1,28 +1,103 @@
 import threading
 import socket
+import json
+from data_structures.bst import BinarySearchTree
+from potstop import Potstop
+
+
+class Client:
+    def __init__(self, socket, address, name = ""):
+        self.socket = socket
+        self.address = address
+        self.name = name
+
+    def __eq__(self, other: "Client") -> bool:
+        return self.address == other.address
+    
+    def __lt__(self, other: "Client") -> bool:
+        return self.address < other.address
 
 class Server:
     def __init__(self, host="127.0.0.1", port=8888):
         self.__host = host
         self.__port = port
         self.__server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.__clients = []
+        self.__clients = BinarySearchTree()
+        self.__potstop = Potstop()
 
-    def handle_client(self, client_socket, address):
-        print(f"[+] Nova conexão de {address}")
+    def start(self):
+        self.__server_sock.bind((self.__host, self.__port))
+        self.__server_sock.listen(10)
+        threading.Thread(target=self.stop_server, daemon=True).start()
+        
+        print(f"[+] Servidor escutando em {self.__host}:{self.__port}")
+        
         while True:
             try:
-                msg = client_socket.recv(1024).decode()
+                client_sock, address = self.__server_sock.accept()
+                client = Client(client_sock, address)
+                self.__clients.add(client)
+                threading.Thread(target=self.handle_client_requests, args=(client,), daemon=True).start()
+            except (OSError, KeyboardInterrupt):
+                break
+    
+    def handle_client_requests(self, client: Client):
+        while True:
+            try:
+                msg = client.socket.recv(1024).decode()
                 if not msg:
                     break
-                print(f"[{address}] {msg}")
-                client_socket.sendall(f"{msg}".encode())
+                response = self.handle_message(client, msg)
+                client.socket.sendall(f"{response}".encode())
+                if msg.startswith('QUIT'):
+                    break
             except ConnectionResetError:
                 break
         
-        print(f"[-] Conexão encerrada com {address}")
-        self.__clients.remove(client_socket)
-        client_socket.close()
+        print(f"[-] Conexão encerrada com {client.address}")
+        self.__clients.delete(client)
+        client.socket.close()
+        
+
+    def handle_message(self, client: Client, msg: str):
+        if msg.startswith("QUIT"):
+            print("HEllo world")
+            self.__potstop.remove_player(client.name)
+            return "30 Left"
+        elif msg.startswith('START'):
+            if self.__potstop.is_game_started():
+                return "42 Impossible"
+            if self.__potstop.get_leader() != client.name:
+                return "41 Unauthorized"
+            self.__potstop.start_game()
+            return "40 Started"
+        elif msg.startswith('JOIN'):
+            try:
+                name = msg.split('\n')[1].strip()
+            except IndexError:
+                return "0 Bad Request"
+            if name in self.__potstop.get_players() or name.upper() == "SERVER":
+                return "22 Already Joined"
+
+            self.__potstop.add_player(name, 0)
+            client.name = name
+            return "20 Joined"
+        elif msg.startswith('STOP'):
+            try:
+                data = json.loads(msg.strip().split('\n')[1])
+            except json.JSONDecodeError:
+                return "0 Bad Request"
+            
+            #TODO: Implementar o stop
+            #TODO: Precisa usar uma fila para caso o stop seja
+            # feito, não seja valido, porém outro stop tinha sido
+            # solicitado por outro cliente com a possibilidade de ser valido.
+            # TODO: Preciso receber o stop de um cliente e conseguir
+            # pegar os dados de todos os clientes.
+            
+        else:
+            return "0 Bad Request"
+
 
     def stop_server(self):
         while True:
@@ -37,26 +112,10 @@ class Server:
                 break
         
         self.__server_sock.close()
-        for client in self.__clients:
-            client.sendall("ENDC".encode())
-            client.close()
-
-    def start(self):
-        self.__server_sock.bind((self.__host, self.__port))
-        self.__server_sock.listen(10)
-        threading.Thread(target=self.stop_server, daemon=True).start()
-        
-        print(f"[+] Servidor escutando em {self.__host}:{self.__port}")
-        
-        while True:
-            try:
-                client_sock, address = self.__server_sock.accept()
-                self.__clients.append(client_sock)
-                client_thread = threading.Thread(target=self.handle_client, args=(client_sock, address), daemon=True)
-                client_thread.start()
-            except (OSError, KeyboardInterrupt):
-                break
+        if not self.__clients.isEmpty():
+            for client in self.__clients:
+                client.socket.sendall("ENDC".encode())
+                client.socket.close()
 
 if __name__ == "__main__":
-    server = Server()
-    server.start()
+    Server().start()
