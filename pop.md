@@ -2,12 +2,20 @@
 
 ## 📌 Estrutura do Protocolo:
 ```
-method: [JOIN | QUIT | START | STOP]
-user: [...]
-data: [...]
+method: JOIN | QUIT | START | STOP
+data: {}
+```
+
+## 📌 Ex:
+```
+STOP
+{"cor": "Azul", "animal": "Arara", "alimento": "Arroz"}
 ```
 
 ## ⚡ Métodos:
+
+> ### 🧩 Erro de requisição:
+- **`❌ 0 Bad Request`**: Formato incorreto de requisição.
 
 > ### 🛑 STOP
 #### 🛠️ Requisição:
@@ -23,12 +31,12 @@ data: [...]
 > ### 📤 JOIN
 #### 🛠️ Requisição:
 - O usuário envia uma requisição `JOIN` para o servidor.
-- *Nenhum dado precisa ser enviado.*
+- Nome do usuário é enviado em *data*.
 - *Nenhum dado é retornado.*
 #### 📩 Status:
 - ✅ **`20 Joined`**: O usuario entrou na partida com sucesso.
 - ❌ **`21 Full Lobby`**: A sala está cheia.
-- ❌ **`22 Room Not Found`**: A sala não foi encontrada.
+- ❌ **`22 Already Joined`**: Já existe um jogador com esse nome.
 
 ---
 
