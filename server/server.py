@@ -74,8 +74,10 @@ class Server:
         
         time.sleep(0.2)
         self.broadcast("STOP")
-        while len(self.__potstop.answers) < len(self.__potstop.get_players()):
+        timeout = 0
+        while timeout < 10 and len(self.__potstop.answers) < len(self.__potstop.get_players()):
             time.sleep(0.5)
+            timeout += 1
         answers = [data for _, data in self.__potstop.answers]
         words = self.__potstop.count_words(answers)
         for name, ans in self.__potstop.answers:
