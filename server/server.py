@@ -3,7 +3,7 @@ import socket
 import json
 from data_structures.bst import BinarySearchTree
 from potstop import Potstop
-
+import time
 
 class Client:
     def __init__(self, socket, address, name = ""):
@@ -39,14 +39,11 @@ class Server:
                 self.__clients.add(client)
                 threading.Thread(target=self.handle_client_requests, args=(client,), daemon=True).start()
             except (OSError, KeyboardInterrupt):
-                print("Encerrando servidor...")
-                self.kill_clients()
                 break
     
     def handle_client_requests(self, client: Client):
         while True:
             try:
-                print(self.__potstop.get_ranking())
                 msg: str = client.socket.recv(1024).decode()
                 if not msg:
                     break
@@ -73,12 +70,17 @@ class Server:
                     stop[0].socket.sendall("10 Stopped".encode())
                 else:
                     stop[0].socket.sendall("14 Stop Failed".encode())
-
+            time.sleep(0.1)
+        
+        time.sleep(0.2)
         self.broadcast("STOP")
+        while len(self.__potstop.answers) < len(self.__potstop.get_players()):
+            time.sleep(0.5)
         answers = [data for _, data in self.__potstop.answers]
         words = self.__potstop.count_words(answers)
         for name, ans in self.__potstop.answers:
             self.__potstop.compute_points(name, ans, words)
+        print(self.__potstop.get_ranking())
 
 
     def handle_message(self, client: Client, msg: str):
