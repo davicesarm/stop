@@ -17,6 +17,8 @@ STOP
 > ### 🧩 Erro de requisição:
 - **`❌ 0 Bad Request`**: Formato incorreto de requisição.
 
+---
+
 > ### 🛑 STOP
 #### 🛠️ Requisição:
 - Os dados a serem enviados estarão em **`data`**.
