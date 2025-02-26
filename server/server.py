@@ -95,6 +95,7 @@ class Server:
             if self.__potstop.get_leader() != client.name:
                 return "41 Unauthorized"
             self.__potstop.start_game()
+            self.broadcast("START")
             threading.Thread(target=self.validate_stop, daemon=True).start()
             return "40 Started"
         elif msg.startswith('JOIN'):

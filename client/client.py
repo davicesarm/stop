@@ -27,6 +27,13 @@ class Client:
             
         except Exception as e:
             return (1, f'Ocorreu um erro: ({e.__str__()})! Tente novamente.')
+    
+    def send_start_to_server(self) -> None:
+        try:         
+            self.__client_sock.sendall('START'.encode())            
+                        
+        except Exception as e:
+             threading.Thread(target=self.__on_message, args=(f'Ocorreu um erro: ({e.__str__()})! Tente novamente.')).start()
         
     def __retrieve_response(self, request_method: str, timeout: int = 2):
         started_at = time.time()
@@ -34,7 +41,7 @@ class Client:
         while time.time() - started_at < timeout:
             with self.__lock:
                 if self.__pending_responses[request_method] is not None:
-                    response = self.__pending_responses.pop('JOIN')
+                    response = self.__pending_responses.pop(request_method)
                     assert response is not None
                     return (0 if response[1] == '0' else 1, response[3:])
             
@@ -55,6 +62,11 @@ class Client:
                     if msg[0] == '2':
                         with self.__lock:
                             self.__pending_responses['JOIN'] = msg
+                    if msg[0] == '4':
+                        with self.__lock:
+                            self.__pending_responses['START'] = msg
+                else:
+                    self.__on_message(msg)
                 
             except (ConnectionResetError, ConnectionAbortedError):
                 break
