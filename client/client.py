@@ -1,6 +1,7 @@
 import threading
 import socket
 import time
+from json import dumps
 from typing import Callable, Optional
 
 class Client:
@@ -15,27 +16,32 @@ class Client:
     
     def send_username_to_server(self, username: str) -> tuple[int, str]:
         try:
-            message = f"JOIN\n{username}"
-            self.__pending_responses['JOIN'] = None
+            self.__pending_responses['JOIN'] = None            
+            self.__client_sock.sendall(f"JOIN\n{username}".encode())
             
-            self.__client_sock.sendall(message.encode())
-            
-            response = self.__retrieve_response('JOIN')
-            
-            
-            return response
-            
+            return self.__retrieve_response('JOIN')
         except Exception as e:
-            return (1, f'Ocorreu um erro: ({e.__str__()})! Tente novamente.')
+            return (99, f'Ocorreu um erro: ({e.__str__()})! Tente novamente.')
     
-    def send_start_to_server(self) -> None:
+    def send_start_to_server(self) -> tuple[int, str]:
         try:         
-            self.__client_sock.sendall('START'.encode())            
-                        
+            self.__pending_responses['START'] = None
+            self.__client_sock.sendall('START'.encode())
+                                    
+            return self.__retrieve_response('START')
         except Exception as e:
-             threading.Thread(target=self.__on_message, args=(f'Ocorreu um erro: ({e.__str__()})! Tente novamente.')).start()
+            return (99, f'Ocorreu um erro: ({e.__str__()})! Tente novamente.')
+             
+    def send_pots_to_server(self, pots: dict[str, str]) -> tuple[int, str]:
+        try:         
+            self.__pending_responses['STOP'] = None
+            self.__client_sock.sendall(f'STOP\n{dumps(pots)}'.encode())
+            
+            return self.__retrieve_response('STOP')
+        except Exception as e:
+             return (99, f'Ocorreu um erro: ({e.__str__()})! Tente novamente.')
         
-    def __retrieve_response(self, request_method: str, timeout: int = 2):
+    def __retrieve_response(self, request_method: str, timeout: int = 5):
         started_at = time.time()
         
         while time.time() - started_at < timeout:
@@ -43,22 +49,26 @@ class Client:
                 if self.__pending_responses[request_method] is not None:
                     response = self.__pending_responses.pop(request_method)
                     assert response is not None
-                    return (0 if response[1] == '0' else 1, response[3:])
+                    return (int(response[1]), response[3:])
             
             time.sleep(0.2)
 
-        return (0, 'Tempo limite para resposta do servidor!')
+        return (9, 'Tempo limite para resposta do servidor!')
           
     def __receive_messages(self):        
         while True:
             try:
                 msg = self.__client_sock.recv(1024).decode()
-                # self.__on_message(msg)
                 
                 if msg.upper() == 'ENDC' or not msg:
                     break
                 
                 if msg[0].isdigit():
+                    # self.__on_message(msg)
+                    print(msg)
+                    if msg[0] == '1':
+                        with self.__lock:
+                            self.__pending_responses['STOP'] = msg
                     if msg[0] == '2':
                         with self.__lock:
                             self.__pending_responses['JOIN'] = msg
@@ -87,7 +97,7 @@ class Client:
         
         while True:            
             try:
-                self.__on_message(f'{'Problemas de conexão com o servidor, t' if not tried else 'T'}entando reconectar...')
+                self.__on_message(f"{'Problemas de conexão com o servidor, t' if not tried else 'T'}entando reconectar...")
                 self.__client_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 self.__client_sock.connect((self.__server_host, self.__server_port))
                 self.__on_message('Conexão reestabelecida!')
@@ -95,5 +105,5 @@ class Client:
                 
                 break
             except Exception:
-                time.sleep(5)
+                time.sleep(3)
             tried = True

@@ -10,7 +10,7 @@ class Entry(Screen[str]):
     def compose(self) -> ComposeResult:
         yield Header()
         yield Vertical(
-            Input(placeholder="Seu nome", classes="entry-input"),
+            Input(placeholder="Seu nome", classes="entry-input", valid_empty=False),
             Button("Entrar", classes="entry-button"),
             id="entry-main",
         )
@@ -20,5 +20,8 @@ class Entry(Screen[str]):
     @on(Button.Pressed)
     def handle_entry_sent(self) -> None:
         _input = self.query_one(Input)
-
-        self.dismiss(_input.value)
+        
+        if _input.value == '':
+            self.notify('Invalid username: empty!')
+        else:
+            self.dismiss(_input.value)
