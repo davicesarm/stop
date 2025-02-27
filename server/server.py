@@ -120,16 +120,16 @@ class Server:
             return "41 Unauthorized"
         self.__potstop.start_game()
         game_init = {"round": self.__potstop.round, "pots": self.__potstop.pots, "letter": self.__potstop.gen_letter()}	
-        self.broadcast(f"START\n{game_init}")
+        self.broadcast(f"START\n{json.dumps(game_init)}")
         return "40 Started"
     
     def __stop(self, client: Client, msg: str) -> str:
         if not self.__potstop.game_started:
-            return "12 Not Started"
+            return "13 Not Started"
 
         if self.__potstop.stopped:
             if any(name == client.name for name, _ in self.__potstop.answers):
-                return "11 Already Stopped"
+                return "12 Already Stopped"
             try:
                 data = json.loads(msg.strip().split('\n')[1])
             except json.JSONDecodeError:
@@ -138,15 +138,12 @@ class Server:
             
             self.__potstop.answers.append((client.name, data))
             start_time = time.time()
-            i = 0
             while (time.time() - start_time) < 7.5 and self.__potstop.game_started:
-                print(f"teste2 {self.__potstop.game_started} {i}")
-                i += 1
                 time.sleep(0.5)
-            return f"10 Stopped\n{self.__potstop.ranking}"
+            return f"10 Stopped\n{json.dumps(self.__potstop.ranking)}"
         else:
             threading.Thread(target=self.__call_stop, args=(client.name,), daemon=True).start()
-            return "10 Stopped"
+            return "11 Called Stop"
         
     def __kill_clients(self) -> None:
         if not self.__clients.isEmpty():

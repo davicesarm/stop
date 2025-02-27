@@ -30,8 +30,9 @@ STOP
 ```
 #### 📩 Status:
 - ✅ **`10 Stopped`**: O Stop foi realizado com sucesso.
-- ❌ **`11 Already Stopped`**: O stop já foi realizado.
-- ❌ **`12 Not Started`**: O jogo ainda não começou.
+- ✅ **`11 Called Stop`**: Um usuário chamou o stop.
+- ❌ **`12 Already Stopped`**: O stop já foi realizado.
+- ❌ **`13 Not Started`**: O jogo ainda não começou.
 
 ---
 
