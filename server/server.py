@@ -6,7 +6,7 @@ from potstop import Potstop
 import time
 
 class Client:
-    def __init__(self, socket, address, name = ""):
+    def __init__(self, socket: socket, address: tuple[str, int], name=""):
         self.socket = socket
         self.address = address
         self.name = name
@@ -41,20 +41,20 @@ class Server:
             except (OSError, KeyboardInterrupt):
                 break
     
-    
-    def broadcast(self, msg: str):
+    def broadcast(self, msg: str) -> None:
         for client in self.__clients:
             client.socket.sendall(msg.encode())
     
-    
-    def __handle_client_requests(self, client: Client):
+    def __handle_client_requests(self, client: Client) -> None:
         while True:
             try:
                 msg: str = client.socket.recv(1024).decode()
                 if not msg:
                     break
                 
+                print(f"> [{client.address}] {msg}")
                 response = self.__handle_message(client, msg)
+                print(f"< [{client.address}] {response}")
                 client.socket.sendall(f"{response}".encode())
                 if msg.startswith('QUIT'):
                     break
@@ -63,42 +63,26 @@ class Server:
         
         print(f"[-] Conexão encerrada com {client.address}")
         self.__clients.delete(client)
+        self.__potstop.remove_player(client.name)
         client.socket.close()
         
-        
-    def __validate_stop(self):
-        while self.__potstop.game_started:
-            while not self.__potstop.stop_queue.is_empty():
-                stop: tuple[Client, dict] = self.__potstop.stop_queue.dequeue()
-                if self.__potstop.is_stop_valid(stop[1]):
-                    self.__potstop.stop()
-                    self.__potstop.stop_queue.clear()
-                    self.__potstop.end_game()
-                    stop[0].socket.sendall("10 Stopped".encode())
-                else:
-                    stop[0].socket.sendall("14 Stop Failed".encode())
-            time.sleep(0.1)
-        
-        time.sleep(0.2)
-        self.broadcast("STOP")
-        timeout = 0
-        while timeout < 10 and len(self.__potstop.answers) < len(self.__potstop.get_players()):
+    def __call_stop(self, name: str) -> None:
+        self.__potstop.stop()
+        self.broadcast("STOPPED BY " + name)
+        start_time = time.time()
+        while (time.time() - start_time) < 5 and len(self.__potstop.answers) < len(self.__potstop.players):
             time.sleep(0.5)
-            timeout += 1
         answers = [data for _, data in self.__potstop.answers]
         words = self.__potstop.count_words(answers)
         for name, ans in self.__potstop.answers:
             self.__potstop.compute_points(name, ans, words)
-        # time.sleep(0.2)
-        # self.broadcast(f"RANK\n{self.__potstop.get_ranking()}")
-        # decidindo...
+        self.__potstop.end_game()
 
-
-    def __handle_message(self, client: Client, msg: str):
+    def __handle_message(self, client: Client, msg: str) -> str:
         commands = {
             "QUIT": self.__quit,
             "JOIN": self.__join,
-            "START": self.__pop,
+            "START": self.__start,
             "STOP": self.__stop    
         }
         
@@ -107,57 +91,70 @@ class Server:
         
         return commands[msg.split("\n")[0]](client, msg)
         
-        
-    def __quit(self, client, _=None): 
+    def __quit(self, client: Client, _=0) -> str: 
         self.__potstop.remove_player(client.name)
         return "30 Left"
     
-    def __join(self, client, msg):
+    def __join(self, client: Client, msg: str) -> str:
         try:
             name = msg.split('\n')[1].strip()
         except IndexError:
             return "0 Bad Request"
-        if name in self.__potstop.get_players() or name.upper() == "SERVER":
+        if len(self.__potstop.players) >= self.__potstop.player_limit:
+            return "21 Full Lobby"
+        if name in self.__potstop.players:
             return "22 Already Joined"
+        if name == '':
+            return "24 Invalid Name"
+        if self.__potstop.game_started:
+            return "23 Already Started"
 
         self.__potstop.add_player(name, 0)
         client.name = name
         return "20 Joined"
         
-    def __pop(self, client, _=None):
+    def __start(self, client: Client, _=0) -> str:
         if self.__potstop.game_started:
-            return "42 Impossible"
-        if self.__potstop.get_leader() != client.name:
+            return "42 Already Started"
+        if self.__potstop.leader != client.name:
             return "41 Unauthorized"
         self.__potstop.start_game()
-        self.broadcast("START")
-        threading.Thread(target=self.__validate_stop, daemon=True).start()
+        game_init = {"round": self.__potstop.round, "pots": self.__potstop.pots, "letter": self.__potstop.gen_letter()}	
+        self.broadcast(f"START\n{game_init}")
         return "40 Started"
     
-    def __stop(self, client, msg):
-        try:
-            data = json.loads(msg.strip().split('\n')[1])
-        except json.JSONDecodeError:
-            return "0 Bad Request"
-        
-        # Adicionar verificao caso tenha tentado dar stop sem o jogo ter começado
+    def __stop(self, client: Client, msg: str) -> str:
+        if not self.__potstop.game_started:
+            return "12 Not Started"
 
-        if not self.__potstop.stopped:
-            self.__potstop.stop_queue.enqueue((client, data))
-            return "11 Verifying Stop"
-        else:
+        if self.__potstop.stopped:
+            if any(name == client.name for name, _ in self.__potstop.answers):
+                return "11 Already Stopped"
+            try:
+                data = json.loads(msg.strip().split('\n')[1])
+            except json.JSONDecodeError:
+                print(data)
+                return "0 Bad Request"
+            
             self.__potstop.answers.append((client.name, data))
+            start_time = time.time()
+            i = 0
+            while (time.time() - start_time) < 7.5 and self.__potstop.game_started:
+                print(f"teste2 {self.__potstop.game_started} {i}")
+                i += 1
+                time.sleep(0.5)
+            return f"10 Stopped\n{self.__potstop.ranking}"
+        else:
+            threading.Thread(target=self.__call_stop, args=(client.name,), daemon=True).start()
             return "10 Stopped"
         
-        
-    def __kill_clients(self):
+    def __kill_clients(self) -> None:
         if not self.__clients.isEmpty():
             for client in self.__clients:
                 client.socket.sendall("ENDC".encode())
                 client.socket.close()
 
-
-    def __stop_server(self):
+    def __stop_server(self) -> None:
         while True:
             print("Digite 'q' para encerrar o servidor.")
             try:
