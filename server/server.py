@@ -43,7 +43,9 @@ class Server:
     
     def broadcast(self, msg: str) -> None:
         for client in self.__clients:
+            if client.name == '': continue
             client.socket.sendall(msg.encode())
+            print(f"<BROADCAST> [{client.name or client.address}] {repr(msg)[1:-1]}")
     
     def __handle_client_requests(self, client: Client) -> None:
         while True:
@@ -52,9 +54,9 @@ class Server:
                 if not msg:
                     break
                 
-                print(f"> [{client.address}] {msg}")
+                print(f"> [{client.name or client.address}] {repr(msg)[1:-1]}")
                 response = self.__handle_message(client, msg)
-                print(f"< [{client.address}] {response}")
+                print(f"< [{client.name or client.address}] {repr(response)[1:-1]}")
                 client.socket.sendall(f"{response}".encode())
                 if msg.startswith('QUIT'):
                     break
@@ -119,8 +121,11 @@ class Server:
         if self.__potstop.leader != client.name:
             return "41 Unauthorized"
         self.__potstop.start_game()
-        game_init = {"round": self.__potstop.round, "pots": self.__potstop.pots, "letter": self.__potstop.gen_letter()}	
-        self.broadcast(f"START\n{json.dumps(game_init)}")
+        def send_start():
+            time.sleep(0.3)
+            game_init = {"round": self.__potstop.round, "pots": self.__potstop.pots, "letter": self.__potstop.gen_letter()}	
+            self.broadcast(f"START\n{json.dumps(game_init)}")
+        threading.Thread(target=send_start, daemon=True).start()
         return "40 Started"
     
     def __stop(self, client: Client, msg: str) -> str:
