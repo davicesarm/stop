@@ -69,6 +69,7 @@ class Server:
         client.socket.close()
         
     def __call_stop(self, name: str) -> None:
+        time.sleep(0.3)
         self.__potstop.stop()
         self.broadcast("STOPPED BY " + name)
         start_time = time.time()
