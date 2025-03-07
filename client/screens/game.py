@@ -14,11 +14,14 @@ class Game(Screen[dict[str, str]]):
     def __init__(
         self,
         pots: list[str],
-        game_letter: str
+        game_letter: str,
+        on_stop: Callable[[], None]
     ) -> None:
         super().__init__()
         self.__pots = pots
         self.__game_letter = game_letter
+        self.__on_stop = on_stop
+        self.title = 'The letter is ' + game_letter
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -32,11 +35,12 @@ class Game(Screen[dict[str, str]]):
 
     @on(Button.Pressed)
     def handle_game_stopped(self) -> None:
-        self.get_pots_verify_and_dismiss()
+        if self.verify_pots():
+            self.__on_stop()
+            
         
-    def get_pots_verify_and_dismiss(self):
+    def verify_pots(self):
         inputs = self.query(Input)
-        answers: dict[str, str] = {}
         invalids = 0
         first_invalid = None
         
@@ -48,13 +52,11 @@ class Game(Screen[dict[str, str]]):
                 if not first_invalid:
                     first_invalid = _input.name
             
-            assert isinstance(_input.name, str)
-            answers[_input.name] = _input.value
-            
         if not invalids:
-            self.dismiss(answers)
+            return True
         else:
-            self.notify(f"{first_invalid} and {invalids} other are invalid!")  
+            self.notify(f"{first_invalid} and {invalids} other are invalid!")
+            return False 
     
     def get_pots_and_dismiss(self):
         inputs = self.query(Input)
