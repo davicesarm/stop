@@ -25,9 +25,8 @@ class Potstop(App):  # type: ignore
 
     CSS_PATH = "potstop.tcss"
 
-    def __init__(self, server_host: str = "localhost", server_port: int = 8888):
+    def __init__(self, server_host: str = "0.0.0.0", server_port: int = 8888):
         super().__init__()
-
         self.__server_host = server_host
         self.__server_port = server_port
         self.game_letter: str = ""
@@ -119,18 +118,19 @@ class Potstop(App):  # type: ignore
                     on_stop=self.send_first_stop,
                     ),
                     self.send_pots,
-            )
+                )
+
             elif splitted_message[0].startswith("STOPPED") and isinstance(
             self.screen, Game
             ):
                 game = cast(Game, self.screen)
                 self.call_from_thread(game.get_pots_and_dismiss)
             else:
-                self.call_from_thread(self.notify, {message})
+                self.call_from_thread(self.notify, str(message))
         except Exception as e:
             logging.exception(f"Failed to handle server message with: {str(e)}")
 
 
 if __name__ == "__main__":
     app = Potstop()
-    app.run(inline=True)
+    app.run()

@@ -17,7 +17,7 @@ class Client:
     def __init__(
         self,
         on_message: Callable[[str], None],
-        server_host: str = "localhost",
+        server_host: str = "0.0.0.0",
         server_port: int = 8888,
     ):
         self.__server_host = server_host
@@ -53,7 +53,7 @@ class Client:
         try:
             self.__pending_responses["STOP"] = None
             self.__client_sock.sendall(
-                f"STOP{'\n' + dumps(pots) if pots else ''}".encode()
+                ("STOP" + ('\n' + dumps(pots) if pots else '')).encode()
             )
 
             response = self.__retrieve_response("STOP")

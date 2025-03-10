@@ -18,10 +18,11 @@ class Client:
         return self.address < other.address
 
 class Server:
-    def __init__(self, host="127.0.0.1", port=8888):
+    def __init__(self, host="0.0.0.0", port=8888):
         self.__host = host
         self.__port = port
         self.__server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.__server_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, True)
         self.__clients = BinarySearchTree()
         self.__potstop = Potstop()
 
@@ -135,7 +136,7 @@ class Server:
 
         if self.__potstop.stopped:
             if any(name == client.name for name, _ in self.__potstop.answers):
-                return "12 Already Stopped"
+                return "12 Already Stopped" # Revisar essa resposta
             try:
                 data = json.loads(msg.strip().split('\n')[1])
             except json.JSONDecodeError:
