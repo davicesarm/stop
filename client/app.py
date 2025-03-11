@@ -58,8 +58,8 @@ class Potstop(App):  # type: ignore
             self.push_screen(Entry(), self.send_username)
             self.notify(response[1])
 
-    def send_first_stop(self):
-        response = self.__client_socket.send_stop_to_server()
+    def send_first_stop(self, answers: dict[str, str]):
+        response = self.__client_socket.send_stop_to_server(answers)
 
         if response[0][0] == "1":
             self.notify("You stopped the game!")

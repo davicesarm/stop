@@ -48,12 +48,12 @@ class Client:
             return ("99", f"Ocorreu um erro: ({e.__str__()})! Tente novamente.")
 
     def send_stop_to_server(
-        self, pots: Optional[dict[str, str]] = None
+        self, pots: dict[str, str]
     ) -> tuple[str, str]:
         try:
             self.__pending_responses["STOP"] = None
             self.__client_sock.sendall(
-                ("STOP" + ('\n' + dumps(pots) if pots else '')).encode()
+                f'STOP\n{dumps(pots)}'.encode()
             )
 
             response = self.__retrieve_response("STOP")
@@ -159,14 +159,3 @@ class Client:
             except Exception:
                 time.sleep(3)
             tried = True
-
-
-if __name__ == "__main__":
-    c = Client(on_message=print)
-
-    print("sending username")
-    c.send_username_to_server("arthur")
-    print("sending start")
-    c.send_start_to_server()
-    print("sending stop")
-    c.send_stop_to_server()

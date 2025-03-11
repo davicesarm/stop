@@ -15,9 +15,9 @@ class Game(Screen[dict[str, str]]):
         self,
         pots: list[str],
         game_letter: str,
-        on_stop: Callable[[], None]
+        on_stop: Callable[[dict[str, str]], None]
     ) -> None:
-        super().__init__()
+        super().__init__(id='game-screen')
         self.__pots = pots
         self.__game_letter = game_letter
         self.__on_stop = on_stop
@@ -26,17 +26,17 @@ class Game(Screen[dict[str, str]]):
     def compose(self) -> ComposeResult:
         yield Header()
         yield Vertical(
-            VerticalScroll(*self.__gen_pots(), id="game-pots"),
+            VerticalScroll(Horizontal(Button(self.__game_letter, id='letter-label', disabled=True), id='letter-horizontal'), *self.__gen_pots(), id="game-pots"),
             Horizontal(Timer(self.get_pots_and_dismiss), Button("POTS", classes="game-button"), id="game-horizontal"),
             id="game-main",
         )
         yield Footer()
         Button.press
 
-    @on(Button.Pressed)
+    @on(Button.Pressed, '.game-button')
     def handle_game_stopped(self) -> None:
         if self.verify_pots():
-            self.__on_stop()
+            self.__on_stop(self.get_pots())
             
         
     def verify_pots(self):
@@ -66,11 +66,24 @@ class Game(Screen[dict[str, str]]):
             assert isinstance(_input.name, str)
             answers[_input.name] = _input.value
             
-        self.dismiss(answers)        
+        self.dismiss(answers)
+    
+    def get_pots(self):
+        inputs = self.query(Input)
+        answers: dict[str, str] = {}
+        
+        for _input in inputs:            
+            assert isinstance(_input.name, str)
+            answers[_input.name] = _input.value
+        
+        return answers
 
     def __gen_pots(self):
         for pot in self.__pots:
-            yield Input(name=pot, placeholder=pot, classes="pot", validators=Function(self.__validator, 'Value is not valid'))
+            inp = Input(name=pot, placeholder=pot, classes="pot", validators=Function(self.__validator, 'Value is not valid'))
+            inp.tooltip = pot
+            
+            yield inp
             
     def __validator(self, value: str) -> bool:
         if len(value) <= 2:
