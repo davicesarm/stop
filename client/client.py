@@ -17,7 +17,7 @@ class Client:
     def __init__(
         self,
         on_message: Callable[[str], None],
-        server_host: str = "0.0.0.0",
+        server_host: str = "localhost",
         server_port: int = 8888,
     ):
         self.__server_host = server_host

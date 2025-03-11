@@ -25,7 +25,7 @@ class Potstop(App):  # type: ignore
 
     CSS_PATH = "potstop.tcss"
 
-    def __init__(self, server_host: str = "0.0.0.0", server_port: int = 8888):
+    def __init__(self, server_host: str = "localhost", server_port: int = 8888):
         super().__init__()
         self.__server_host = server_host
         self.__server_port = server_port
