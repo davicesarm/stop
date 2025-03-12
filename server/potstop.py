@@ -83,7 +83,16 @@ class Potstop:
         return len(answer) > 2 and answer[0].upper() == self.__letter.upper()
             
     def gen_letter(self) -> str:
-        self.__letter = chr(random.randint(65, 90)).upper()
+        self.letters = [chr(i) for i in range(65, 91)]
+        self.weights = [5] * 26
+        rare = (
+            ("Z", 1), ("X", 1), ("Q", 2),
+            ("H", 2), ("K", 2), ("Y", 1),
+            ("W", 1)
+        )
+        for letter, weight in rare:
+            self.weights[ord(letter) - 65] = weight
+        self.__letter = random.choices(self.letters, weights=self.weights, k=1)[0]
         return self.__letter
                 
     def add_player(self, name: str, points: int = 0):

@@ -25,6 +25,8 @@ class Server:
         self.__server_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, True)
         self.__clients = BinarySearchTree()
         self.__potstop = Potstop()
+        self.__stop_lock = threading.Lock()
+        
 
     def start(self):
         self.__server_sock.bind((self.__host, self.__port))
@@ -42,9 +44,13 @@ class Server:
             except (OSError, KeyboardInterrupt):
                 break
     
-    def broadcast(self, msg: str) -> None:
+    def broadcast(self, msg: str, exclude: set = None) -> None:
+        if exclude is None:
+            exclude = set()
+        
         for client in self.__clients:
-            if client.name == '': continue
+            if client.name == '' or client.name in exclude: 
+                continue
             client.socket.sendall(msg.encode())
             print(f"<BROADCAST> [{client.name or client.address}] {repr(msg)[1:-1]}")
     
@@ -69,19 +75,6 @@ class Server:
         self.__potstop.remove_player(client.name)
         client.socket.close()
         
-    def __call_stop(self, name: str) -> None:
-        time.sleep(0.3)
-        self.__potstop.stop()
-        self.broadcast("STOPPED BY " + name)
-        start_time = time.time()
-        while (time.time() - start_time) < 5 and len(self.__potstop.answers) < len(self.__potstop.players):
-            time.sleep(0.5)
-        answers = [data for _, data in self.__potstop.answers]
-        words = self.__potstop.count_words(answers)
-        for name, ans in self.__potstop.answers:
-            self.__potstop.compute_points(name, ans, words)
-        self.__potstop.end_game()
-
     def __handle_message(self, client: Client, msg: str) -> str:
         commands = {
             "QUIT": self.__quit,
@@ -130,27 +123,66 @@ class Server:
         threading.Thread(target=send_start, daemon=True).start()
         return "40 Started"
     
+    def __call_stop(self, client: Client, data: dict[str, str]) -> None:
+        # Salvo as respostas da pessoa que mandou stop
+        self.__potstop.answers.append((client.name, data))
+        """ 
+        Se houver stops simultaneos significa que alguns usuarios
+        já enviaram as respostas no primeiro if.
+        Então preciso excluí-los do broadcast para evitar erros.
+        """
+        # LOG print(client.name, "entrou no call_stop")
+        time.sleep(0.5)
+        exclude = {name for name, _ in self.__potstop.answers}
+        # LOG print(exclude, "excluidos")
+        # Sinalizo que houve um stop para os clientes
+        self.broadcast("STOPPED BY " + client.name, exclude=exclude)
+        
+        # Aguardo as respostas chegarem (se demorar muito eu passo direto)
+        start_time = time.time()
+        while (time.time() - start_time) < 5 and len(self.__potstop.answers) < len(self.__potstop.players):
+            time.sleep(0.5)
+        
+        # Crio uma lista de respostas list[dict[str, str]]
+        # e computo os pontos
+        answers = [data for _, data in self.__potstop.answers]
+        words = self.__potstop.count_words(answers)
+        for name, ans in self.__potstop.answers:
+            self.__potstop.compute_points(name, ans, words)
+        
+        # Enfim finalizo o jogo e retorno stopped e o ranking
+        self.__potstop.end_game()
+        return f"10 Stopped\n{json.dumps(self.__potstop.ranking)}"
+    
+    
     def __stop(self, client: Client, msg: str) -> str:
         if not self.__potstop.game_started:
             return "13 Not Started"
+        
+        try:
+            data = json.loads(msg.strip().split('\n')[1])
+        except (json.JSONDecodeError, IndexError):
+            return "0 Bad Request"
 
+        # Se ja tiverem dado stop entao vai entrar nesse if
+        # LOG print(client.name, "antes do if")
         if self.__potstop.stopped:
-            if any(name == client.name for name, _ in self.__potstop.answers):
-                return "12 Already Stopped" # Revisar essa resposta
-            try:
-                data = json.loads(msg.strip().split('\n')[1])
-            except json.JSONDecodeError:
-                print(data)
-                return "0 Bad Request"
-            
+            # LOG print(client.name, "dentro do if")
+            # Manda as respostas e aguarda o jogo acabar
+            # (quando terminar de computar os pontos o estado muda) linha 152
             self.__potstop.answers.append((client.name, data))
+            # LOG print(client.name, "salvou as respostas")
             start_time = time.time()
             while (time.time() - start_time) < 7.5 and self.__potstop.game_started:
                 time.sleep(0.5)
             return f"10 Stopped\n{json.dumps(self.__potstop.ranking)}"
-        else:
-            threading.Thread(target=self.__call_stop, args=(client.name,), daemon=True).start()
-            return "11 Called Stop"
+        
+        # LOG print(client.name, "depois do if")
+        # Dou stop, para garantir que proximo entre no if
+        self.__potstop.stop()
+        
+        return self.__call_stop(client, data)
+
         
     def __kill_clients(self) -> None:
         if not self.__clients.isEmpty():
