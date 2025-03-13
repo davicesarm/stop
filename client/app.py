@@ -25,30 +25,36 @@ class Potstop(App):  # type: ignore
 
     CSS_PATH = "potstop.tcss"
 
-    def __init__(self, server_host: str = "localhost", server_port: int = 8888):
+    def __init__(self):
         super().__init__()
-        self.__server_host = server_host
-        self.__server_port = server_port
         self.game_letter: str = ""
         self.game_pots: list[str] = []
         self.game_round = 0
+        self.__client_socket = Client(self.handle_server_messages)
 
     def on_mount(self) -> None:
         self.theme = "dracula"
-        self.__client_socket = Client(
-            server_host=self.__server_host,
-            server_port=self.__server_port,
-            on_message=self.handle_server_messages,
-        )
+
         self.push_screen(Entry(), self.send_username)
 
-    def send_username(self, username: Optional[str]) -> None:
-        assert username is not None
-        response = self.__client_socket.send_username_to_server(username)
+    def send_username(self, infos: Optional[tuple[str, Optional[str]]]) -> None:
+        assert infos is not None
+
+        if infos[1]:
+            address = infos[1].split(":")
+            
+            self.__client_socket.connect(
+                address[0],
+                int(address[1]) if len(address) > 1 and address[1].isdigit() else None,
+            )
+        else:
+            self.__client_socket.connect()
+            
+        response = self.__client_socket.send_username_to_server(infos[0])            
 
         if not int(response[0]):
             self.push_screen(Waiting(), self.send_start)  # type: ignore
-            self.title = "Playing potstop as " + username
+            self.title = "Playing potstop as " + infos[0]
             self.notify("You joined the game!")
         else:
             if response[0][0] == "1":
