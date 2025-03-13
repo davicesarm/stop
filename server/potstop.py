@@ -1,22 +1,26 @@
 from data_structures.queue import Queue
+from data_structures.hashtable import HashTable
 from typing import Optional
 import random
 from collections import Counter
 
 class Potstop:
     def __init__(self):
-        # Pots padrão
-        self.__letter = self.gen_letter()
-        # self.__pots = ['CEP', 'MSÉ', 'Ator', 'Nome', 'Música', 'Carro', 'Comida', 'Objeto', 'Verbo', 'Utensílio de cozinha']
-        self.__pots = ['Nome', "Cidade", "Comida", "Animal", "Objeto"]
-        # {"Nome": "Mari", "Cidade": "Maragogi", "Comida": "Macaxeira", "Objeto": "Monitor"}
+        from pots import pots
+        self.__avaliable_pots = pots
+        self.__pots = self.__gen_pots()
+        self.__letter = self.__gen_letter()
         self.__player_limit = 8
-        self.__players = {}
+        self.__players = HashTable()
         self.__order = Queue()
         self.__game_started = False
         self.__stopped = False
-        self.answers = []
         self.__round = 0
+        self.answers = []
+        
+    @property
+    def letter(self) -> str:
+        return self.__letter
         
     @property
     def pots(self) -> list[str]:
@@ -41,15 +45,15 @@ class Potstop:
     
     @property
     def players(self) -> list[str]:
-        return list(self.__players.keys())
+        return self.__players.keys()
     
     @property
     def leader(self) -> Optional[str]:
         return self.__order.peek()
     
     @property
-    def ranking(self) -> dict:
-        return dict(sorted(self.__players.items(), key=lambda i: i[1], reverse=1))
+    def ranking(self) -> list[tuple[str, int]]:
+        return sorted(self.__players.items(), key=lambda i: i[1], reverse=1)
     
     @property
     def round(self):
@@ -59,6 +63,8 @@ class Potstop:
         self.__stopped = True
 
     def start_game(self) -> None:
+        self.__gen_pots()
+        self.__gen_letter()
         self.__round += 1
         self.__stopped = False
         self.answers.clear()
@@ -82,19 +88,6 @@ class Potstop:
                     
         return len(answer) > 2 and answer[0].upper() == self.__letter.upper()
             
-    def gen_letter(self) -> str:
-        self.letters = [chr(i) for i in range(65, 91)]
-        self.weights = [5] * 26
-        rare = (
-            ("Z", 1), ("X", 1), ("Q", 2),
-            ("H", 2), ("K", 2), ("Y", 1),
-            ("W", 1)
-        )
-        for letter, weight in rare:
-            self.weights[ord(letter) - 65] = weight
-        self.__letter = random.choices(self.letters, weights=self.weights, k=1)[0]
-        return self.__letter
-                
     def add_player(self, name: str, points: int = 0):
         self.__players[name] = points
         self.__order.enqueue(name)
@@ -103,7 +96,10 @@ class Potstop:
         if name not in self.__players:
             return None
         self.__order.remove(name)
-        return self.__players.pop(name)
+        removed = self.__players.remove(name)
+        if len(self.__players) == 0:
+            self.__game_started = False
+        return removed
         
     def get_points(self, name: str) -> Optional[int]:
         return self.__players.get(name)
@@ -111,7 +107,7 @@ class Potstop:
     def remove_leader(self) -> Optional[str]:
         removed = self.__order.dequeue()
         if removed is not None:
-            self.__players.pop(removed)
+            self.__players.remove(removed)
         return removed
         
     def compute_points(self, name: str, answer: dict[str, str], counted_words: dict[str, dict[str, int]]) -> None:
@@ -147,7 +143,23 @@ class Potstop:
                     
             count[pot] = dict(category)
         return count
-                
+              
+    def __gen_pots(self) -> list[str]:
+        self.__pots = [random.choice(pot) for pot in self.__avaliable_pots]
+        return self.__pots  
+            
+    def __gen_letter(self) -> str:
+        self.letters = [chr(i) for i in range(65, 91)]
+        self.weights = [5] * 26
+        rare = (
+            ("Z", 1), ("X", 1), ("Q", 2),
+            ("H", 2), ("K", 2), ("Y", 1),
+            ("W", 1)
+        )
+        for letter, weight in rare:
+            self.weights[ord(letter) - 65] = weight
+        self.__letter = random.choices(self.letters, weights=self.weights, k=1)[0]
+        return self.__letter
             
 if __name__ == "__main__":   
     # Tests
@@ -163,7 +175,7 @@ if __name__ == "__main__":
         game.add_player(*player)
 
     print("---- Ranking ----")
-    print("\n".join((f"{k} - {v}" for k,v in game.ranking.items())), end=" ")
+    print("\n".join((f"{k} - {v}" for k,v in game.ranking)), end=" ")
     print("Ranking inicial\n")
     print(game.get_points("claras"), end=" ")
     print("Pontos de clara\n")
@@ -174,7 +186,7 @@ if __name__ == "__main__":
     game.add_player_points("davis", 5)
     print("Setando pontos de davis para 20\n")
     print("---- Ranking ----")
-    print("\n".join((f"{k} - {v}" for k,v in game.ranking.items())), end=" ")
+    print("\n".join((f"{k} - {v}" for k,v in game.ranking)), end=" ")
     print("Ranking atualizado\n")
     print(game.leader, end=" ")
     print("Novo lider\n")

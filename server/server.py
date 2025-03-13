@@ -1,7 +1,6 @@
 import threading
 import socket
 import json
-from data_structures.bst import BinarySearchTree
 from potstop import Potstop
 import time
 
@@ -14,19 +13,14 @@ class Client:
     def __eq__(self, other: "Client") -> bool:
         return self.address == other.address
     
-    def __lt__(self, other: "Client") -> bool:
-        return self.address < other.address
-
 class Server:
-    def __init__(self, host="0.0.0.0", port=8888):
-        self.__host = host
-        self.__port = port
+    def __init__(self):
+        self.__host = "0.0.0.0"
+        self.__port = 8888
         self.__server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.__server_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, True)
-        self.__clients = BinarySearchTree()
+        self.__clients = []
         self.__potstop = Potstop()
-        self.__stop_lock = threading.Lock()
-        
 
     def start(self):
         self.__server_sock.bind((self.__host, self.__port))
@@ -39,7 +33,7 @@ class Server:
             try:
                 client_sock, address = self.__server_sock.accept()
                 client = Client(client_sock, address)
-                self.__clients.add(client)
+                self.__clients.append(client)
                 threading.Thread(target=self.__handle_client_requests, args=(client,), daemon=True).start()
             except (OSError, KeyboardInterrupt):
                 break
@@ -70,8 +64,8 @@ class Server:
             except ConnectionResetError:
                 break
         
-        print(f"[-] Conexão encerrada com {client.address}")
-        self.__clients.delete(client)
+        print(f"[-] Conexão encerrada com {client.name or client.address}")
+        self.__clients.remove(client)
         self.__potstop.remove_player(client.name)
         client.socket.close()
         
@@ -118,7 +112,7 @@ class Server:
         self.__potstop.start_game()
         def send_start():
             time.sleep(0.3)
-            game_init = {"round": self.__potstop.round, "pots": self.__potstop.pots, "letter": self.__potstop.gen_letter()}	
+            game_init = {"round": self.__potstop.round, "pots": self.__potstop.pots, "letter": self.__potstop.letter}	
             self.broadcast(f"START\n{json.dumps(game_init)}")
         threading.Thread(target=send_start, daemon=True).start()
         return "40 Started"
@@ -131,10 +125,8 @@ class Server:
         já enviaram as respostas no primeiro if.
         Então preciso excluí-los do broadcast para evitar erros.
         """
-        # LOG print(client.name, "entrou no call_stop")
         time.sleep(0.5)
         exclude = {name for name, _ in self.__potstop.answers}
-        # LOG print(exclude, "excluidos")
         # Sinalizo que houve um stop para os clientes
         self.broadcast("STOPPED BY " + client.name, exclude=exclude)
         
@@ -165,19 +157,15 @@ class Server:
             return "0 Bad Request"
 
         # Se ja tiverem dado stop entao vai entrar nesse if
-        # LOG print(client.name, "antes do if")
         if self.__potstop.stopped:
-            # LOG print(client.name, "dentro do if")
             # Manda as respostas e aguarda o jogo acabar
-            # (quando terminar de computar os pontos o estado muda) linha 152
+            # (quando terminar de computar os pontos o estado muda) linha 146
             self.__potstop.answers.append((client.name, data))
-            # LOG print(client.name, "salvou as respostas")
             start_time = time.time()
             while (time.time() - start_time) < 7.5 and self.__potstop.game_started:
                 time.sleep(0.5)
             return f"10 Stopped\n{json.dumps(self.__potstop.ranking)}"
         
-        # LOG print(client.name, "depois do if")
         # Dou stop, para garantir que proximo entre no if
         self.__potstop.stop()
         
@@ -185,10 +173,9 @@ class Server:
 
         
     def __kill_clients(self) -> None:
-        if not self.__clients.isEmpty():
-            for client in self.__clients:
-                client.socket.sendall("ENDC".encode())
-                client.socket.close()
+        for client in self.__clients:
+            client.socket.sendall("ENDC".encode())
+            client.socket.close()
 
     def __stop_server(self) -> None:
         while True:

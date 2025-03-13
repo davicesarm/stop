@@ -7,7 +7,7 @@ from textual.containers import Horizontal, Vertical
 
 class Ranking(Screen[str]):
 
-    def __init__(self, players: dict[str, int]) -> None:
+    def __init__(self, players: list[list[str, int]]) -> None:
         super().__init__()
         self.__players = players
 
@@ -29,8 +29,8 @@ class Ranking(Screen[str]):
         yield Footer()
 
     def __gen_ranks(self):
-        for player in self.__players:
-            yield ListItem(Label(f'{player} - {self.__players[player]}'), classes='ranking-item')
+        for player, points in self.__players:
+            yield ListItem(Label(f'{player} - {points}'), classes='ranking-item')
 
     @on(Button.Pressed)
     def handle_continue_game(self, event: Button.Pressed) -> None:
