@@ -15,6 +15,7 @@ mdit-py-plugins==0.4.2
 mdurl==0.1.2
 msgpack==1.1.0
 multidict==6.1.0
+numpy==2.2.3
 platformdirs==4.3.6
 propcache==0.2.1
 pycodestyle==2.12.1
