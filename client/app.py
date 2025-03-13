@@ -57,14 +57,6 @@ class Potstop(App):  # type: ignore
             self.push_screen(Entry(), self.send_username)
             self.notify(response[1])
 
-    def send_first_stop(self, answers: dict[str, str]):
-        response = self.__client_socket.send_stop_to_server(answers)
-
-        if response[0][0] == "1":
-            self.notify("You stopped the game!")
-
-        self.notify(response[1])
-
     def send_start(self, _: None = None) -> None:
         self.push_screen(Waiting(), self.send_start)
 
@@ -82,9 +74,8 @@ class Potstop(App):  # type: ignore
                 Ranking(players=json.loads(response[1].split("\n")[1])),
                 self.handle_ranking_action,
             )
-            return
 
-        self.notify(response[1])
+        self.notify(response[1].split('\n')[0])
 
     def handle_ranking_action(self, action: Optional[str]):
         if action == "restart":
@@ -100,8 +91,11 @@ class Potstop(App):  # type: ignore
 
     def handle_server_messages(self, message: str):
         splitted_message = message.split("\n")
+        
+        self.call_from_thread(self.notify, "chamou o handler")
         try:
             if splitted_message[0] == "START":
+                self.call_from_thread(self.notify, "entrou no start")
                 data: StartData = json.loads(splitted_message[1])
 
                 def change_start_data():
@@ -115,15 +109,14 @@ class Potstop(App):  # type: ignore
                 self.call_from_thread(
                     self.push_screen,
                     Game(
-                    pots=self.game_pots,
-                    game_letter=self.game_letter,
-                    on_stop=self.send_first_stop,
+                        pots=self.game_pots,
+                        game_letter=self.game_letter,
                     ),
                     self.send_pots,
                 )
 
             elif splitted_message[0].startswith("STOPPED") and isinstance(
-            self.screen, Game
+                self.screen, Game
             ):
                 game = cast(Game, self.screen)
                 self.call_from_thread(game.get_pots_and_dismiss)

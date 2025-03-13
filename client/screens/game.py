@@ -15,12 +15,10 @@ class Game(Screen[dict[str, str]]):
         self,
         pots: list[str],
         game_letter: str,
-        on_stop: Callable[[dict[str, str]], None]
     ) -> None:
         super().__init__(id='game-screen')
         self.__pots = pots
         self.__game_letter = game_letter
-        self.__on_stop = on_stop
         self.title = 'The letter is ' + game_letter
 
     def compose(self) -> ComposeResult:
@@ -36,7 +34,7 @@ class Game(Screen[dict[str, str]]):
     @on(Button.Pressed, '.game-button')
     def handle_game_stopped(self) -> None:
         if self.verify_pots():
-            self.__on_stop(self.get_pots())
+            self.get_pots_and_dismiss()
             
         
     def verify_pots(self):
@@ -59,12 +57,7 @@ class Game(Screen[dict[str, str]]):
             return False 
     
     def get_pots_and_dismiss(self):
-        inputs = self.query(Input)
-        answers: dict[str, str] = {}
-        
-        for _input in inputs:            
-            assert isinstance(_input.name, str)
-            answers[_input.name] = _input.value
+        answers = self.get_pots()
             
         self.dismiss(answers)
     

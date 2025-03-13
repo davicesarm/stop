@@ -71,12 +71,10 @@ class Client:
                 if self.__pending_responses[request_method] is not None:
                     response = self.__pending_responses.pop(request_method)
                     assert response is not None
-                    return (response[1:3].strip(), response[3:])
+                    return (response[1:2], response[3:])
 
             time.sleep(0.5)
 
-        # self.__another_on_message(f'pending response: {self.__pending_responses}')
-        print("Tempo limite para resposta do servidor!")
         return ("9", "Tempo limite para resposta do servidor!")
 
     def __receive_messages(self):

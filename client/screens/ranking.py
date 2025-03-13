@@ -3,11 +3,12 @@ from textual.screen import Screen
 from textual.app import ComposeResult
 from textual.widgets import Button, Header, Footer, ListView, ListItem, Label
 from textual.containers import Horizontal, Vertical
+from typing import Union
 
 
 class Ranking(Screen[str]):
 
-    def __init__(self, players: list[list[str, int]]) -> None:
+    def __init__(self, players: list[list[Union[str, int]]]) -> None:
         super().__init__()
         self.__players = players
 
