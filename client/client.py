@@ -49,6 +49,19 @@ class Client:
             return response
         except Exception as e:
             return ("99", f"Ocorreu um erro: ({e.__str__()})! Tente novamente.")
+        
+    def send_quit_to_server(self):
+        try:
+            self.__pending_responses["QUIT"] = None
+            self.__client_sock.sendall(
+                'QUIT'.encode()
+            )
+
+            response = self.__retrieve_response("QUIT")
+
+            return response
+        except Exception as e:
+            return ("99", f"Ocorreu um erro: ({e.__str__()})! Tente novamente.")
 
     def __retrieve_response(self, request_method: str, timeout: int = 4):
         started_at = time.time()
@@ -70,43 +83,27 @@ class Client:
         while True:
             try:
                 msg = self.__client_sock.recv(1024).decode()
-                logging.debug(f"[__receive_messages] Mensagem recebida: {msg}")
 
                 if msg.upper() == "ENDC" or not msg:
                     break
+                
+                code = msg[0]
 
-                if msg[0].isdigit():
-                    logging.debug(
-                        f"[__receive_messages] Mensagem começa com dígito: {msg[0]}"
-                    )
-                    if msg[0] == "1":
-                        with self.__lock:
-                            self.__pending_responses["STOP"] = msg
-                            logging.info(
-                                f"[__receive_messages] Definida resposta pendente para 'STOP': {msg}"
-                            )
-                    elif msg[0] == "2":
-                        with self.__lock:
-                            self.__pending_responses["JOIN"] = msg
-                            logging.info(
-                                f"[__receive_messages] Definida resposta pendente para 'JOIN': {msg}"
-                            )
-                    elif msg[0] == "4":
-                        with self.__lock:
-                            self.__pending_responses["START"] = msg
-                            logging.info(
-                                f"[__receive_messages] Definida resposta pendente para 'START': {msg}"
-                            )
+                if code.isdigit():                    
+                    response_types = {
+                        "1": 'STOP',
+                        "2": 'JOIN',
+                        "3": 'QUIT',
+                        "4": 'START',                        
+                    }
+                    
+                    with self.__lock:
+                        self.__pending_responses[response_types[code]] = msg
+                            
                 else:
-                    # self.__on_message(msg)
-                    def see_thread():
-                        logging.info(f"[__see_thread] Chamando on_message com: {msg}")
-                        self.__on_message(msg)
-                    threading.Thread(target=see_thread, daemon=True).start()
-                    logging.info(f"[__receive_messages] Chamando on_message com: {msg}")
+                    threading.Thread(target=self.__on_message, args=(msg,), daemon=True).start()
 
-            except (ConnectionResetError, ConnectionAbortedError) as e:
-                logging.error(f"[__receive_messages] Erro de conexão: {e}")
+            except (ConnectionResetError, ConnectionAbortedError):
                 break
 
         self.__client_sock.close()

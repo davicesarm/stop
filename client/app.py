@@ -7,13 +7,6 @@ from textual.app import App
 from client.screens import Entry, Game, Ranking, Waiting
 from client.client import Client
 
-logging.basicConfig(
-    level=logging.DEBUG,
-    format="%(asctime)s [%(threadName)s] %(levelname)s: %(message)s" + "\n",
-    filename="log-app.txt",
-    encoding="utf-8",
-)
-
 class StartData(TypedDict):
     round: int
     pots: list[str]
@@ -83,8 +76,6 @@ class Potstop(App):  # type: ignore
     def send_pots(self, pots: Optional[dict[str, str]]) -> None:
         assert pots is not None
         response = self.__client_socket.send_stop_to_server(pots)
-        
-        logging.info(f"Failed to handle server message with: {response}")
 
         if not int(response[0]):
             self.push_screen(
@@ -99,8 +90,13 @@ class Potstop(App):  # type: ignore
         if action == "restart":
             self.send_start()
         else:
-            self.notify("Quitting the game!", timeout=3)
-            self.exit()  # type: ignore
+            response = self.__client_socket.send_quit_to_server()
+            
+            if not int(response[0]):
+                self.notify("Quitting the game!", timeout=3)
+                self.exit()  # type: ignore
+            
+            self.notify('Error trying to quit the game!')          
 
     def handle_server_messages(self, message: str):
         splitted_message = message.split("\n")
