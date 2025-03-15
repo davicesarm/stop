@@ -1,0 +1,115 @@
+Screen {
+  padding: 0;
+}
+
+#game-pots {
+  layout: grid;
+  grid-size: 2;
+  padding: 1;
+  grid-rows: 4;
+}
+
+#letter-horizontal {
+  column-span: 2;
+  align: center middle;
+}
+
+#game-horizontal {
+  layout: grid;
+  grid-size: 2 1;
+  height: 5;
+  align: center middle;
+  content-align: center middle;
+}
+
+Timer {
+  width: 15;
+}
+
+.pot {
+  column-span: 1;
+}
+
+#entry-main {
+  layout: grid;
+  grid-size: 1 3;
+  grid-rows: 4;
+  padding: 1 5;
+  align: center middle;
+  grid-gutter: 0;
+}
+
+.entry-button {
+  column-span: 1;
+  width: 100%;
+  max-width: 40;
+}
+
+.entry-input {
+  column-span: 1;
+  max-width: 40;
+}
+
+#ranking-list {
+  height: 80%;
+  align: center middle;
+}
+
+.ranking-item {  
+  align: center middle;
+  width: 100%;
+}
+
+.ranking-item:focus {  
+  width: 5;
+}
+
+.ranking-item Label {
+  width: auto;
+  text-align: center;
+}
+
+#ranking-horizontal {
+  layout: grid;
+  grid-size: 2 1;
+  height: 20%;
+  align: center middle;
+}
+
+#ranking-list:focus {
+  border: solid $primary;
+  background: $background 100%;
+}
+
+.option-list--option-highlighted {
+  background: initial;
+}
+
+.option-list--option-highlighted:hover {
+  background: blue;
+}
+
+#waiting-main {
+  align: center middle;
+  content-align: center middle;
+}
+
+#waiting-main Button {
+  width: 20;
+}
+
+#waiting-main Label {
+  width: 20;
+  text-align: center;
+}
+
+#waiting-loading {
+  height: 20%;
+  width: 20;
+}
+
+#letter-label {
+  width: 5;
+  height: 3;
+  content-align: center middle;
+}
