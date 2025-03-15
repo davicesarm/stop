@@ -9,11 +9,17 @@ Screen {
   grid-rows: 4;
 }
 
+#letter-horizontal {
+  column-span: 2;
+  align: center middle;
+}
+
 #game-horizontal {
   layout: grid;
   grid-size: 2 1;
   height: 5;
   align: center middle;
+  content-align: center middle;
 }
 
 Timer {
@@ -26,7 +32,7 @@ Timer {
 
 #entry-main {
   layout: grid;
-  grid-size: 1 2;
+  grid-size: 1 3;
   grid-rows: 4;
   padding: 1 5;
   align: center middle;
@@ -46,6 +52,20 @@ Timer {
 
 #ranking-list {
   height: 80%;
+  align: center middle;
+}
+
+.ranking-item {  
+  align: center middle;
+  width: 100%;
+}
+
+.ranking-item:focus {  
+  width: 5;
+}
+
+.ranking-item Label {
+  width: auto;
   text-align: center;
 }
 
@@ -62,5 +82,34 @@ Timer {
 }
 
 .option-list--option-highlighted {
-  background: $background;
+  background: initial;
+}
+
+.option-list--option-highlighted:hover {
+  background: blue;
+}
+
+#waiting-main {
+  align: center middle;
+  content-align: center middle;
+}
+
+#waiting-main Button {
+  width: 20;
+}
+
+#waiting-main Label {
+  width: 20;
+  text-align: center;
+}
+
+#waiting-loading {
+  height: 20%;
+  width: 20;
+}
+
+#letter-label {
+  width: 5;
+  height: 3;
+  content-align: center middle;
 }

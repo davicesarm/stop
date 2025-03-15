@@ -5,12 +5,13 @@ from textual.widgets import Input, Button, Header, Footer
 from textual.containers import Vertical
 
 
-class Entry(Screen[str]):
+class Entry(Screen[tuple[str, str]]):
 
     def compose(self) -> ComposeResult:
         yield Header()
         yield Vertical(
-            Input(placeholder="Seu nome", classes="entry-input"),
+            Input(placeholder="Seu nome", classes="entry-input", valid_empty=False, id='entry-name'),
+            Input(placeholder="192.168.0.1:8888", classes="entry-input", id='entry-address'),            
             Button("Entrar", classes="entry-button"),
             id="entry-main",
         )
@@ -19,6 +20,10 @@ class Entry(Screen[str]):
     @on(Input.Submitted)
     @on(Button.Pressed)
     def handle_entry_sent(self) -> None:
-        _input = self.query_one(Input)
-
-        self.dismiss(_input.value)
+        name = self.query_one('#entry-name', Input)
+        address = self.query_one('#entry-address', Input)        
+        
+        if name.value == '':
+            self.notify('Invalid username: empty!')
+        else:
+            self.dismiss((name.value.strip(), address.value.strip()))

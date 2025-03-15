@@ -1,26 +1,26 @@
 from textual import on
 from textual.screen import Screen
 from textual.app import ComposeResult
-from textual.widgets import Button, Header, Footer, OptionList
+from textual.widgets import Button, Header, Footer, ListView, ListItem, Label
 from textual.containers import Horizontal, Vertical
+from typing import Union
 
 
-class Ranking(Screen[dict[str, str]]):
+class Ranking(Screen[str]):
 
-    def __init__(self, game_leader: bool, players: list[str]) -> None:
+    def __init__(self, players: list[list[Union[str, int]]]) -> None:
         super().__init__()
-        self.__game_leader = game_leader
         self.__players = players
 
     def compose(self) -> ComposeResult:
         yield Header()
         yield Vertical(
-            OptionList(*self.__gen_ranks(), id="ranking-list", wrap=True),
+            ListView(*self.__gen_ranks(), id="ranking-list"),
             Horizontal(
                 Button(
-                    "Restart" if self.__game_leader else "Continue",
+                    "Restart",
                     classes="ranking-button",
-                    id="restart-button",
+                    id="main-button",
                 ),
                 Button("Quit", classes="ranking-button", id="continue-button"),
                 id="ranking-horizontal",
@@ -30,20 +30,9 @@ class Ranking(Screen[dict[str, str]]):
         yield Footer()
 
     def __gen_ranks(self):
-        for player in self.__players:
-            yield player
-            yield None
+        for player, points in self.__players:
+            yield ListItem(Label(f'{player} - {points}'), classes='ranking-item')
 
-    @on(Button.Pressed, '#continue-button')
-    def handle_continue_game(self) -> None:
-        # _input = self.query_one(Input)
-
-        # self.dismiss(_input.value)
-        ...
-    
-    @on(Button.Pressed, '#restart-button')
-    def handle_restart_game(self) -> None:
-        # _input = self.query_one(Input)
-
-        # self.dismiss(_input.value)
-        ...
+    @on(Button.Pressed)
+    def handle_continue_game(self, event: Button.Pressed) -> None:
+        self.dismiss(str(event.button.label).lower())
