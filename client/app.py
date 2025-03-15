@@ -92,10 +92,8 @@ class Potstop(App):  # type: ignore
     def handle_server_messages(self, message: str):
         splitted_message = message.split("\n")
         
-        self.call_from_thread(self.notify, "chamou o handler")
         try:
             if splitted_message[0] == "START":
-                self.call_from_thread(self.notify, "entrou no start")
                 data: StartData = json.loads(splitted_message[1])
 
                 def change_start_data():
