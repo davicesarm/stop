@@ -9,8 +9,28 @@
 - **Arquivos do Projeto:** 
     ```
     stop/
+    ├── client/
+    │   ├── screens/
+    │   │   ├── entry.py
+    │   │   ├── game.py
+    │   │   ├── ranking.py
+    │   │   ├── waiting.py
+    │   │   └── __init__.py
+    │   ├── app.py
+    │   ├── client.py
+    │   ├── potstop.tcss
+    │   └── __init__.py
+    ├── server/
+    │   ├── data_structures/
+    │   │   ├── hashtable.py
+    │   │   ├── queue.py
+    │   │   └── __init__.py
+    │   ├── pots.py
+    │   ├── potstop.py
+    │   ├── server.py
+    │   └── __init__.py
     ├── .gitignore
-    ├── main.py
+    ├── pop.md
     ├── README.md
     └── requirements.txt
     ```
