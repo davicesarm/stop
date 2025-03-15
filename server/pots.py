@@ -6,15 +6,12 @@ pots = [[ # Pessoas e Nomes
         "Vilão",
         "Personagem de filme",
         "Personagem de desenho",
-        "Personagem de anime",
-        "Personagem de livro",
         "Profissão"
     ],
     [ # Lugares
         "Cidade",
         "Estado brasileiro",
         "País",
-        "Capital do mundo",
         "Lugar turístico",
         "Bairro"
     ],
@@ -44,10 +41,9 @@ pots = [[ # Pessoas e Nomes
         "Item de maquiagem",
         "Brinquedo"
     ],
-    [ # Ciência e Saúde
-        "Doença",
+    [ # Divertido
+        "Minha sogra é",
         "Parte do corpo humano",
-        "Elemento químico"
     ],
     [ # Esporte e Lazer
         "Esporte",
@@ -56,7 +52,7 @@ pots = [[ # Pessoas e Nomes
     ],
     [ # Outros
         "Veiculo",
-        "Marca de carro"
+        "Marca/modelo de carro",
         "Cor",
         "Palavra em inglês",
         "Algo pequeno",
