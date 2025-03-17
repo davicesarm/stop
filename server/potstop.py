@@ -6,34 +6,34 @@ from collections import Counter
 
 class Potstop:
     """ 
-    Classe que representa o jogo Potstop.
+    Class representing the Potstop game.
     
     **Public properties & attributes:**
 
-    * answers: list[dict[str, str]] - Lista de respostas dos jogadores.
-    * letter: str - Letra atual.
-    * pots: list[str] - Categorias atuais.
-    * player_limit: int - Limite de jogadores.
-    * stopped: bool - Indica se o jogo foi parado.
-    * game_started: bool - Indica se o jogo foi iniciado.
-    * players: list[str] - Lista de jogadores.
-    * leader: Optional[str] - Líder atual.
-    * ranking: list[tuple[str, int]] - Ranking dos jogadores.
-    * round: int - Rodada atual.
+    * answers: list[dict[str, str]] - List of player answers.
+    * letter: str - Current letter.
+    * pots: list[str] - Current categories.
+    * player_limit: int - Player limit.
+    * stopped: bool - Indicates if the game has been stopped.
+    * game_started: bool - Indicates if the game has started.
+    * players: list[str] - List of players.
+    * leader: Optional[str] - Current leader.
+    * ranking: list[tuple[str, int]] - Player ranking.
+    * round: int - Current round.
     
     **Public methods:**
     
-    * stop: None - Para o jogo.
-    * start_game: None - Começa o jogo.
-    * end_game: None - Termina o jogo.
-    * add_player_points: None - Adiciona pontos a um jogador.
-    * is_stop_valid: bool - Verifica se uma resposta é válida.
-    * add_player: None - Adiciona um jogador.
-    * remove_player: Optional[str] - Remove um jogador.
-    * get_points: Optional[int] - Retorna os pontos de um jogador.
-    * remove_leader: Optional[str] - Remove o líder.
-    * compute_points: None - Calcula os pontos de um jogador.
-    * count_words: dict[str, dict[str, int]] - Conta as palavras.
+    * stop: None - Stops the game.
+    * start_game: None - Starts the game.
+    * end_game: None - Ends the game.
+    * add_player_points: None - Adds points to a player.
+    * is_stop_valid: bool - Checks if an answer is valid.
+    * add_player: None - Adds a player.
+    * remove_player: Optional[str] - Removes a player.
+    * get_points: Optional[int] - Returns the points of a player.
+    * remove_leader: Optional[str] - Removes the leader.
+    * compute_points: None - Computes the points of a player.
+    * count_words: dict[str, dict[str, int]] - Counts the words.
     """
     
     def __init__(self):
@@ -42,12 +42,12 @@ class Potstop:
         self.__pots = self.__gen_pots()
         self.__letter = self.__gen_letter()
         self.__player_limit = 8
-        self.__players = HashTable()
-        self.__order = Queue()
+        self.__players: HashTable[str, int] = HashTable()
+        self.__order: Queue[str] = Queue()
         self.__game_started = False
         self.__stopped = False
         self.__round = 0
-        self.answers = []
+        self.answers: list[tuple[str, dict[str, str]]] = []
         
     @property
     def letter(self) -> str:
