@@ -62,7 +62,7 @@ stop/
 - ✅ **Pip**: Gerenciador de pacotes para instalar as dependências.
 
 ## 🔗 Protocolo da Aplicação
-[📜 Documentação do Protocolo (clique aqui!)](pop.md)
+[📜 Documentação do Protocolo (clique aqui!)](POP.md)
 
 ## 🚀 Instruções para Execução
 

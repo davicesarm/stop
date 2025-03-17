@@ -69,7 +69,7 @@ class Server:
         self.__potstop.remove_player(client.name)
         client.socket.close()
         
-    def __handle_message(self, client: Client, msg: str) -> str:
+    def __handle_message(self, client: Client, data: str) -> str:
         commands = {
             "QUIT": self.__quit,
             "JOIN": self.__join,
@@ -77,18 +77,23 @@ class Server:
             "STOP": self.__stop    
         }
         
-        if msg.split("\n")[0] not in commands:
+        command = data.split("\n")[0]
+        if command not in commands:
             return "0 Bad Request"
         
-        return commands[msg.split("\n")[0]](client, msg)
+        if command in ["JOIN", "START"]:
+            return commands[command](client, data)
         
-    def __quit(self, client: Client, _=0) -> str: 
-        self.__potstop.remove_player(client.name)
+        return commands[command](client)
+        
+    def __quit(self, client: Client) -> str: 
+        if self.__potstop.remove_player(client.name) is None:
+            return "31 Player Not Found"
         return "30 Left"
     
-    def __join(self, client: Client, msg: str) -> str:
+    def __join(self, client: Client, data: str) -> str:
         try:
-            name = msg.split('\n')[1].strip()
+            name = data.split('\n')[1].strip()
         except IndexError:
             return "0 Bad Request"
         if len(self.__potstop.players) >= self.__potstop.player_limit:
@@ -104,7 +109,7 @@ class Server:
         client.name = name
         return "20 Joined"
         
-    def __start(self, client: Client, _=0) -> str:
+    def __start(self, client: Client) -> str:
         if self.__potstop.game_started:
             return "42 Already Started"
         if self.__potstop.leader != client.name:
@@ -147,12 +152,12 @@ class Server:
         return f"10 Stopped\n{json.dumps(self.__potstop.ranking)}"
     
     
-    def __stop(self, client: Client, msg: str) -> str:
+    def __stop(self, client: Client, data: str) -> str:
         if not self.__potstop.game_started:
-            return "13 Not Started"
+            return "11 Not Started"
         
         try:
-            data = json.loads(msg.strip().split('\n')[1])
+            data = json.loads(data.strip().split('\n')[1])
         except (json.JSONDecodeError, IndexError):
             return "0 Bad Request"
 

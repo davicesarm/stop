@@ -21,8 +21,8 @@ STOP
 
 > ### 🛑 STOP
 #### 📖 Descrição:
-Esse método serve para enviar os dados colocados pelo usuário nas categorias.
-É recomendado que os dados sejam enviados no formato de json.
+O método `STOP` é utilizado para enviar os dados preenchidos pelo usuário nas categorias do jogo.
+Os dados devem ser enviados no formato JSON.
 #### 🔍 Exemplo:
 ```
 STOP
@@ -30,15 +30,13 @@ STOP
 ```
 #### 📩 Status:
 - ✅ **`10 Stopped`**: O Stop foi realizado com sucesso.
-- ✅ **`11 Called Stop`**: Um usuário chamou o stop.
-- ❌ **`12 Already Stopped`**: O stop já foi realizado.
-- ❌ **`13 Not Started`**: O jogo ainda não começou.
+- ❌ **`11 Not Started`**: O jogo ainda não começou.
 
 ---
 
 > ### 📤 JOIN
 #### 📖 Descrição:
-Esse método serve para o usuário entrar na sala.
+O método `JOIN` permite que um usuário entre na sala do jogo.
 #### 🔍 Exemplo:
 ```
 JOIN
@@ -55,19 +53,19 @@ Davi
 
 > ### 📥 QUIT
 #### 📖 Descrição:
-Esse método serve para o usuários sair da sala.
+O método `QUIT` permite que um usuário saia da sala.
 #### 🔍 Exemplo:
 ```
 QUIT
 ```
 #### 📩 Status:
 - ✅ **`30 Left`**: Sucesso ao sair.
-
+- ❌ **`31 Player Not Found`**: Usuário não encontrado.
 ---
 
 > ### ✨ START
 #### 📖 Descrição:
-Esse método serve para iniciar a partida. Apenas o líder consegue iniciá-la.
+O método `START` é utilizado para iniciar a partida. Apenas o líder pode iniciar o jogo.
 #### 🔍 Exemplo:
 ```
 START
@@ -76,29 +74,3 @@ START
 - ✅ **`40 Started`**: A partida foi iniciada com sucesso.
 - ❌ **`41 Unauthorized`**: O usuario não tem permissão para começar a partida.
 - ❌ **`42 Already Started`**: A partida já iniciou.
-<!-- 
----
-
-> ### 🔄️ RESTART
-#### 📖 Descrição:
-Esse método serve para recomeçar a partida. Apenas o líder consegue.
-#### 🔍 Exemplo:
-```
-RESTART
-```
-#### 📩 Status:
-- ✅ **`50 Restarted`**: A partida foi iniciada com sucesso.
-- ❌ **`51 Unauthorized`**: O usuario não tem permissão para recomeçar a partida (não é o lider).
-- ❌ **`52 Game Not Ended`**: A partida não acabou, nem começou.
- -->
-
-<!-- ---
-
-> ### 🪦 END
-#### 🛠️ Requisição:
-- O usuário envia uma requisição `END` para o servidor.
-- Os dados a serem enviados ao servidor estarão em **`data`**.
-
-#### 📩 Resposta:
-- ✅ **`50 End`**: Partida encerrada com sucesso.
-- ❌ **`54 End Failed`**: Não foi possivel encerrar a partida. -->
