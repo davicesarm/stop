@@ -1,3 +1,8 @@
+""" 
+Arquivo com as categorias do jogo 
+em formato de lista.
+"""
+
 pots = [[ # Pessoas e Nomes
         "Nome próprio",
         "Sobrenome",
