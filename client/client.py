@@ -109,11 +109,14 @@ class Client:
 
     def connect(self, host: Optional[str] = None, port: Optional[int] = None):
         try:
+            self.__client_sock.settimeout(1)
             self.__client_sock.connect((host or self.__server_host, port or self.__server_port))
             threading.Thread(target=self.__receive_messages, daemon=True).start()
 
         except Exception:
             self.__on_message("ERROR couldn't connect")
+        finally:
+            self.__client_sock.settimeout(None)
 
     def __reconnect_client(self):
         tried = False
