@@ -5,7 +5,7 @@ from textual.widgets import Header, Footer, LoadingIndicator, Button, Label
 from textual.containers import Vertical
 
 
-class Waiting(Screen[None]):
+class Waiting(Screen): #type: ignore
     
     def __init__(self, full_lobby: bool = False):
         super().__init__()
@@ -25,4 +25,4 @@ class Waiting(Screen[None]):
 
     @on(Button.Pressed)
     def handle_game_start(self) -> None:
-        self.dismiss()
+        self.dismiss() #type: ignore
