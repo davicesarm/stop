@@ -123,9 +123,9 @@ class Server:
         command to execute. The command handler will then receive the rest of the
         message as an argument.
 
-        The handlers for the "JOIN" and "START" commands will receive the entire
+        The handlers for the "JOIN" and "STOP" commands will receive the entire
         message, including the first line, as an argument. The handlers for the
-        "QUIT" and "STOP" commands will only receive the client as an argument.
+        "QUIT" and "START" commands will only receive the client as an argument.
 
         If the command is not recognized, the function will return "0 Bad Request".
 
@@ -147,7 +147,7 @@ class Server:
         if command not in commands:
             return "0 Bad Request"
         
-        if command in ["JOIN", "START"]:
+        if command in ["JOIN", "STOP"]:
             return commands[command](client, data)
         
         return commands[command](client)
