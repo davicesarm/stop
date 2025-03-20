@@ -4,6 +4,7 @@ import json
 from potstop import Potstop
 import time
 from typing import Optional
+import sys
 
 class Client:
     """ 
@@ -24,9 +25,9 @@ class Client:
         return self.address == other.address
     
 class Server:
-    def __init__(self):
+    def __init__(self, port: int = 8888):
         self.__host = "0.0.0.0"
-        self.__port = 8888
+        self.__port = port
         self.__server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.__server_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, True)
         self.__clients: list[Client] = []
@@ -367,4 +368,8 @@ class Server:
 
 
 if __name__ == "__main__":
-    Server().start()
+    if len(sys.argv) == 2:
+        Server(port=int(sys.argv[1])).start()
+    else:
+        Server().start()
+        
