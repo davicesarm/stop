@@ -245,6 +245,8 @@ class Client:
             Exception: If the connection attempt fails, an error message is passed to the
                        `__on_message` method.
         """
+        with open('log.txt', 'w') as f:
+            f.write(f"{host or self.__server_host} {port or self.__server_port}")
         
         try:
             self.__client_sock.settimeout(1)
@@ -258,11 +260,15 @@ class Client:
             elif e.errno == errno.ETIMEDOUT:
                 msg = "ERROR: Connection timed out."
             else:
-                msg = f"ERROR: Socket error occurred: {e.strerror}"
+                msg = f"ERROR: Socket error occurred: {e.strerror or str(e)}"
+            self.__client_sock.close()
+            self.__client_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             return msg
         except Exception as e:
             msg = f"ERROR: Unexpected error occurred: {e}"
             self.__on_message(msg)
+            self.__client_sock.close()
+            self.__client_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             return msg
         finally:
             self.__client_sock.settimeout(None)

@@ -1,5 +1,6 @@
 import json
 import logging
+import ipaddress
 
 from typing import Optional, TypedDict, cast
 from textual.app import App
@@ -58,6 +59,15 @@ class Potstop(App):  # type: ignore
                 - If the response indicates an error, it transitions back to the "Entry" 
                   screen and displays the error message.
         """
+        def is_valid_ip(address: str) -> bool:
+            if address.lower() == "localhost":
+                return True
+            try:
+                ipaddress.ip_address(address)
+                return True
+            except ValueError:
+                return False
+        
         connected = ''
         assert infos is not None
 
@@ -65,7 +75,7 @@ class Potstop(App):  # type: ignore
             address = infos[1].split(":")
             
             connected = self.__client_socket.connect(
-                address[0],
+                address[0] if is_valid_ip(address[0]) else None,
                 int(address[1]) if len(address) > 1 and address[1].isdigit() else None,
             )
         else:            
